@@ -1,23 +1,26 @@
 import path from 'path';
 
-export default {
-    entry: "./src/index.ts",
-    target: "node",
-    mode: "production",
-    output: {
-        filename: "bundle.min.js",
-        path: path.resolve(__dirname, "dist"),
-    },
-    module: {
-        rules: [
-            {
-                test: /\.ts$/,
-                use: "ts-loader",
-                exclude: /node_modules/,
-            },
-        ],
-    },
-    resolve: {
-        extensions: [".ts", ".js"],
-    },
+
+export default () => {
+    return {
+        entry: "./src/index.ts",
+        target: "node",
+        mode: "production",
+        output: {
+            filename: "bundle.min.js",
+            path: path.resolve(__dirname, "dist"),
+        },
+        module: {
+            rules: [
+                {
+                    test: /\.ts$/,
+                    use: "ts-loader",
+                    exclude: /node_modules/,
+                },
+            ],
+        },
+        resolve: {
+            extensions: [".ts", ".js"],
+        },
+    }
 };

@@ -1,5 +1,4 @@
 import { createServer } from "http";
-import { cpus } from "os";
 import { router } from "./router/router";
 
 const PORT = 4000;

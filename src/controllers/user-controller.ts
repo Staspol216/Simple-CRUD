@@ -1,27 +1,35 @@
 import { IncomingMessage, ServerResponse } from "http";
-
-const enum HTTPCodes {
-    OK = 200,
-}
+import { IUserService } from "../services/types";
+import { getPayload } from "../helpers/getPayload";
+import { HTTPCodes } from "./types";
 
 export class UserController {
-    async getOne(req: IncomingMessage, res: ServerResponse) {
-        try {
-            this.sendResponse(res, { test: 1});
-        } catch(e) {
-            console.log(e);
-        }
+
+    private userService;
+
+    constructor(UserService: IUserService) {
+        this.userService = UserService
     }
 
     async getAll(req: IncomingMessage, res: ServerResponse) {
-        try {
-            console.log("getAll");
-        } catch(e) {
-            console.log(e);
-        }
+        const users = await this.userService.getAll();
+        this.sendResponse(res, users);
     }
 
-    private sendResponse<T>(res: ServerResponse, data: T,status: HTTPCodes = HTTPCodes.OK) {
+    async getById(req: IncomingMessage, res: ServerResponse) {
+        const payload = await getPayload(req);
+        const user = this.userService.getById(payload);
+        this.sendResponse(res, user);
+    }
+
+    async create(req: IncomingMessage, res: ServerResponse) {
+        const payload = await getPayload(req);
+        const newUser = await this.userService.create(payload);
+        this.sendResponse(res, newUser, HTTPCodes.CREATED);
+    }
+
+    private sendResponse<T>(res: ServerResponse, data: T, status: HTTPCodes = HTTPCodes.OK) {
+        res.setHeader('Content-Type', 'application/json');
         res.statusCode = status;
         res.end(JSON.stringify(data));
     }
