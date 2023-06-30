@@ -11,7 +11,7 @@ const userRepository = new UserModel([]);
 const userService = new UserService(userRepository);
 const userController = new UserController(userService);
 
-export const router = (req: IncomingMessage, res: ServerResponse) => {
+export const router = async (req: IncomingMessage, res: ServerResponse) => {
     const { url, method } = req;
 
     if (!url) return
@@ -19,25 +19,25 @@ export const router = (req: IncomingMessage, res: ServerResponse) => {
     const [ api, users, id, ...rest ] = url.split('/').filter(Boolean);
     
     try {
-        console.log(url, "url");
-        console.log(url?.startsWith(USERS_API_URL));
         if (url?.startsWith(USERS_API_URL) && rest.length === 0) {
             switch (method) {
             case HTTPMethods.GET: 
                 if (id) {
-                    userController.getById(req, res)
+                    await userController.getById(req, res)
                 } else {
-                    userController.getAll(req, res)
+                    await userController.getAll(req, res)
                 }
                 break;
             case HTTPMethods.POST:
-                userController.create(req, res);
+                await userController.create(req, res);
                 break;
             }
         } else {
             throw ApiError.badRequest(ErrorMessages.INVALID_ENDPOINT);
         }
-    } catch(e) {
-        console.log(e);
+    } catch(error) {
+        const { message, status } = error instanceof ApiError ? error : ApiError.internalServerError();
+        res.statusCode = status;
+        res.end(JSON.stringify({ message }));
     }
 };

@@ -1,13 +1,11 @@
 import { ErrorCodes, ErrorMessages } from "./types";
 
 export class ApiError extends Error {
-    public status;
-    public errors;
-
-    constructor(status: number, message: string, errors = []) {
+    constructor(public status: number, message: string, public errors = []) {
         super(message);
         this.status = status;
         this.errors = errors;
+        Object.setPrototypeOf(this, ApiError.prototype);
     }
 
     static badRequest(message: string, errors = []) {
