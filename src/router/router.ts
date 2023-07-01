@@ -13,28 +13,28 @@ const userController = new UserController(userService);
 
 export const router = async (req: IncomingMessage, res: ServerResponse) => {
     const { url, method } = req;
-
-    if (!url) return
-
-    const [ api, users, id, ...rest ] = url.split('/').filter(Boolean);
     
     try {
-        if (url?.startsWith(USERS_API_URL) && rest.length === 0) {
-            switch (method) {
-            case HTTPMethods.GET: 
-                if (id) {
-                    await userController.getById(req, res)
-                } else {
-                    await userController.getAll(req, res)
-                }
-                break;
-            case HTTPMethods.POST:
-                await userController.create(req, res);
-                break;
+        if (!url) throw ApiError.badRequest(ErrorMessages.INVALID_ENDPOINT);
+
+        const [ _, __, id, ...rest ] = url.split('/').filter(Boolean);
+
+        if (!url?.startsWith(USERS_API_URL) || rest.length !== 0) throw ApiError.badRequest(ErrorMessages.INVALID_ENDPOINT);
+
+        switch (method) {
+        case HTTPMethods.GET: 
+            if (id) {
+                await userController.getById(req, res)
+            } else {
+                await userController.getAll(req, res)
             }
-        } else {
-            throw ApiError.badRequest(ErrorMessages.INVALID_ENDPOINT);
+            break;
+        case HTTPMethods.POST:
+            if (id) throw ApiError.badRequest(ErrorMessages.INVALID_ENDPOINT);
+            await userController.create(req, res);
+            break;
         }
+
     } catch(error) {
         const { message, status } = error instanceof ApiError ? error : ApiError.internalServerError();
         res.statusCode = status;

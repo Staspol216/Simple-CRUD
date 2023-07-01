@@ -1,6 +1,6 @@
 import { IncomingMessage, ServerResponse } from "http";
 import { IUserService } from "../services/types";
-import { getPayload } from "../helpers/getPayload";
+import { getPayload, getId } from "../helpers";
 import { HTTPCodes } from "./types";
 
 export class UserController {
@@ -17,8 +17,9 @@ export class UserController {
     }
 
     async getById(req: IncomingMessage, res: ServerResponse) {
-        const payload = await getPayload(req);
-        const user = this.userService.getById(payload);
+        if (!req.url) return
+        const id = getId(req.url);
+        const user = await this.userService.getById(id);
         this.sendResponse(res, user);
     }
 
