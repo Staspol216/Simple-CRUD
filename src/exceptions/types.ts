@@ -3,5 +3,6 @@ export enum ErrorMessages {
     INVALID_ENDPOINT = "Endpoint is not exist",
     INVALID_ID = "Target id is not valid",
     INVALID_USER_DATA = "Invalid user payload data",
-    USER_NOT_FOUND = "User with target id not found"
+    USER_NOT_FOUND = "User with target id not found",
+    UNAVAILABLE_METHOD = "Unavailable mthod"
 }

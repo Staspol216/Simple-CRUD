@@ -14,7 +14,7 @@ export const router = async (req: IncomingMessage, res: ServerResponse) => {
 
         const [ _, __, id, ...rest ] = url.split('/').filter(Boolean);
 
-        if (!url?.startsWith(USERS_API_URL) || rest.length !== 0) throw ApiError.badRequest(ErrorMessages.INVALID_ENDPOINT);
+        if (!url?.startsWith(USERS_API_URL) || rest.length !== 0) throw ApiError.notFound(ErrorMessages.INVALID_ENDPOINT);
 
         switch (method) {
         case HTTPMethods.GET: 
@@ -34,11 +34,13 @@ export const router = async (req: IncomingMessage, res: ServerResponse) => {
         case HTTPMethods.DELETE:
             await userController.delete(req, res);
             break;
+        default:
+            throw ApiError.badRequest(ErrorMessages.UNAVAILABLE_METHOD);
         }
 
     } catch(error) {
         const { message, status } = error instanceof ApiError ? error : ApiError.internalServerError();
-        res.writeHead(status, HTTPStatusMessages.ERROR)
+        res.writeHead(status, HTTPStatusMessages.ERROR, {"Content-Type": "application/json"})
         res.end(JSON.stringify({ message }));
     }
 };
