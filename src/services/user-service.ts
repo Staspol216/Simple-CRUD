@@ -1,31 +1,39 @@
 import { ErrorMessages } from "../exceptions/types";
 import { ApiError } from "../exceptions/apiError";
 import { validate } from "uuid";
-import { IUserModel } from "../models/user/types";
 import { User } from "../models/user/types";
 import { isValidUser } from "../helpers";
+import userModel from "../models/user/model";
 
-export class UserService {
-    constructor(UserModel: IUserModel) {
-        this.userModel = UserModel;
-    }
-
+class UserService {
     async getAll() {
-        return this.userModel.getAll();
+        return userModel.getAll();
     }
 
     async getById(id: string) {
         if (!validate(id)) throw ApiError.badRequest(ErrorMessages.INVALID_ID);
-        const user = this.userModel.getById(id);
+        const user = userModel.getById(id);
         if (!user) throw ApiError.notFound(ErrorMessages.USER_NOT_FOUND)
-        return this.userModel.getById(id);
+        return userModel.getById(id);
     }
 
     async create(payload: User) {
         if (!isValidUser(payload)) throw ApiError.badRequest(ErrorMessages.INVALID_USER_DATA);
-        const newUser = this.userModel.create(payload);
+        const newUser = userModel.create(payload);
         return newUser
     }
 
-    private userModel;
+    async update(id: string, payload: User) {
+        if (!validate(id)) throw ApiError.badRequest(ErrorMessages.INVALID_ID);
+        if (!isValidUser(payload)) throw ApiError.badRequest(ErrorMessages.INVALID_USER_DATA);
+        const updatedUser = userModel.update(id, payload);
+        return updatedUser;
+    }
+
+    async delete(id: string) {
+        if (!validate(id)) throw ApiError.badRequest(ErrorMessages.INVALID_ID);
+        userModel.delete(id);
+    }
 }
+
+export default new UserService();

@@ -1,15 +1,10 @@
 import { IncomingMessage, ServerResponse } from "http";
 import { ErrorMessages } from "../exceptions/types";
-import { UserController } from "../controllers/user-controller";
 import { ApiError } from "../exceptions/apiError";
 import { USERS_API_URL } from "./const";
 import { HTTPMethods } from "./types";
-import { UserService } from "../services/user-service";
-import { UserModel } from "../models/user/model";
-
-const userRepository = new UserModel([]);
-const userService = new UserService(userRepository);
-const userController = new UserController(userService);
+import userController from "../controllers/user-controller";
+import { HTTPStatusMessages } from "../controllers/types";
 
 export const router = async (req: IncomingMessage, res: ServerResponse) => {
     const { url, method } = req;
@@ -33,11 +28,17 @@ export const router = async (req: IncomingMessage, res: ServerResponse) => {
             if (id) throw ApiError.badRequest(ErrorMessages.INVALID_ENDPOINT);
             await userController.create(req, res);
             break;
+        case HTTPMethods.PUT:
+            await userController.update(req, res);
+            break;
+        case HTTPMethods.DELETE:
+            await userController.delete(req, res);
+            break;
         }
 
     } catch(error) {
         const { message, status } = error instanceof ApiError ? error : ApiError.internalServerError();
-        res.statusCode = status;
+        res.writeHead(status, HTTPStatusMessages.ERROR)
         res.end(JSON.stringify({ message }));
     }
 };
