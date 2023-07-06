@@ -1,28 +1,51 @@
 import { IncomingMessage, ServerResponse } from "http";
-
-const enum HTTPCodes {
-    OK = 200,
-}
+import { getPayload, getId } from "../helpers";
+import { HTTPStatusCodes, HTTPStatusMessages } from "./types";
+import userService from "../services/user-service";
 
 export class UserController {
-    async getOne(req: IncomingMessage, res: ServerResponse) {
-        try {
-            this.sendResponse(res, { test: 1});
-        } catch(e) {
-            console.log(e);
-        }
-    }
-
     async getAll(req: IncomingMessage, res: ServerResponse) {
-        try {
-            console.log("getAll");
-        } catch(e) {
-            console.log(e);
-        }
+        const users = await userService.getAll();
+        this.sendResponse(res, users);
     }
 
-    private sendResponse<T>(res: ServerResponse, data: T,status: HTTPCodes = HTTPCodes.OK) {
-        res.statusCode = status;
+    async getById(req: IncomingMessage, res: ServerResponse) {
+        if (!req.url) return
+        const id = getId(req.url);
+        const user = await userService.getById(id);
+        this.sendResponse(res, user);
+    }
+
+    async create(req: IncomingMessage, res: ServerResponse) {
+        const payload = await getPayload(req);
+        const newUser = await userService.create(payload);
+        this.sendResponse(res, newUser, HTTPStatusCodes.CREATED);
+    }
+
+    async update(req: IncomingMessage, res: ServerResponse) {
+        if (!req.url) return
+        const id = getId(req.url);
+        const payload = await getPayload(req);
+        const updatedUser = await userService.update(id, payload);
+        this.sendResponse(res, updatedUser);
+    }
+
+    async delete(req: IncomingMessage, res: ServerResponse) {
+        if (!req.url) return
+        const id = getId(req.url);
+        await userService.delete(id);
+        this.sendResponse(res, {}, HTTPStatusCodes.DELETED);
+    }
+
+    private sendResponse<T>(
+        res: ServerResponse, 
+        data: T, 
+        status: HTTPStatusCodes = HTTPStatusCodes.OK, 
+        statusMessage = HTTPStatusMessages.OK
+    ) {
+        res.writeHead(status, statusMessage, {'Content-Type': 'application/json'})
         res.end(JSON.stringify(data));
     }
 }
+
+export default new UserController();

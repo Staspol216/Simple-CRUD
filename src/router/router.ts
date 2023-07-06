@@ -1,34 +1,46 @@
 import { IncomingMessage, ServerResponse } from "http";
-import { ErrorMessages } from "../apiError/types";
-import { UserController } from "../controllers/user-controller";
-import { ApiError } from "../apiError/apiError";
+import { ErrorMessages } from "../exceptions/types";
+import { ApiError } from "../exceptions/apiError";
 import { USERS_API_URL } from "./const";
 import { HTTPMethods } from "./types";
+import userController from "../controllers/user-controller";
+import { HTTPStatusMessages } from "../controllers/types";
 
-const userController = new UserController();
-
-export const router = (req: IncomingMessage, res: ServerResponse) => {
-    res.setHeader('Content-Type', 'application/json');
+export const router = async (req: IncomingMessage, res: ServerResponse) => {
     const { url, method } = req;
     
     try {
-        console.log(url, "url");
-        console.log(url?.startsWith(USERS_API_URL))
-        if (url?.startsWith(USERS_API_URL)) {
-            const [ api, users, id, ...rest ] = url.split('/');
-            switch (method) {
-            case HTTPMethods.GET: 
-                if (id) {
-                    userController.getOne(req, res)
-                } else {
-                    userController.getAll(req, res)
-                }
+        if (!url) throw ApiError.badRequest(ErrorMessages.INVALID_ENDPOINT);
+
+        const [ _, __, id, ...rest ] = url.split('/').filter(Boolean);
+
+        if (!url?.startsWith(USERS_API_URL) || rest.length !== 0) throw ApiError.notFound(ErrorMessages.INVALID_ENDPOINT);
+
+        switch (method) {
+        case HTTPMethods.GET: 
+            if (id) {
+                await userController.getById(req, res)
+            } else {
+                await userController.getAll(req, res)
             }
-        } else {
-            throw ApiError.badRequest(ErrorMessages.INVALID_ENDPOINT);
+            break;
+        case HTTPMethods.POST:
+            if (id) throw ApiError.badRequest(ErrorMessages.INVALID_ENDPOINT);
+            await userController.create(req, res);
+            break;
+        case HTTPMethods.PUT:
+            await userController.update(req, res);
+            break;
+        case HTTPMethods.DELETE:
+            await userController.delete(req, res);
+            break;
+        default:
+            throw ApiError.badRequest(ErrorMessages.UNAVAILABLE_METHOD);
         }
 
-    } catch(e) {
-        console.log(e);
+    } catch(error) {
+        const { message, status } = error instanceof ApiError ? error : ApiError.internalServerError();
+        res.writeHead(status, HTTPStatusMessages.ERROR, {"Content-Type": "application/json"})
+        res.end(JSON.stringify({ message }));
     }
 };
